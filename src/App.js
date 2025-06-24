@@ -1,10 +1,10 @@
 import './App.css';
-import Transactions from "./transactiontable";
+import DataTable from "./datatable";
 
 function App() {
   return (
     <div className="App">
-      <Transactions/>
+      <DataTable/>
     </div>
   );
 }

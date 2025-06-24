@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
-const Idk = () => {
+const Tr = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
+    const [showAlert, setShowAlert] = useState(false);
 
     useEffect(() => {
         // Fetch data from your API endpoint that connects to MongoDB
         const fetchData = async () => {
             try {
-                // Replace this URL with your actual API endpoint
-                // Example: 'http://localhost:3000/api/entries' or 'https://your-api.com/entries'
-                const response = await fetch('http://localhost:5003/api/entries');
+                // Update this URL to match your Flask server's port
+                const response = await fetch('http://localhost:5007/api/entries');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -30,6 +29,14 @@ const Idk = () => {
 
         fetchData();
     }, []);
+
+    const handleButtonClick = () => {
+        setShowAlert(true);
+        // Auto-hide the alert after 3 seconds
+        setTimeout(() => {
+            setShowAlert(false);
+        }, 3000);
+    };
 
     if (loading) {
         return (
@@ -59,6 +66,18 @@ const Idk = () => {
             <div className="max-w-6xl mx-auto px-4">
                 <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Sample Data Table</h1>
 
+                {/* Alert Pop-up */}
+                {showAlert && (
+                    <div className="fixed top-4 right-4 z-50 animate-fade-in">
+                        <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-2">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="font-medium">This transaction has been chosen</span>
+                        </div>
+                    </div>
+                )}
+
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                     {data.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
@@ -81,6 +100,9 @@ const Idk = () => {
                                     <th className="px-6 py-4 text-right text-sm font-semibold text-gray-700 uppercase tracking-wider">
                                         Amount
                                     </th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                                        Action
+                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
@@ -100,6 +122,16 @@ const Idk = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                                             ${Number(entry.amount).toFixed(2)}
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            {index === 0 ? (
+                                                <button
+                                                    onClick={handleButtonClick}
+                                                    className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
+                                                >
+                                                    Select
+                                                </button>
+                                            ) : null}
+                                        </td>
                                     </tr>
                                 ))}
                                 </tbody>
@@ -112,4 +144,4 @@ const Idk = () => {
     );
 };
 
-export default Idk;
+export default Tr;
