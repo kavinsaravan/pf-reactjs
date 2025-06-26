@@ -14,7 +14,7 @@ const Transactions = () => {
                 // Update this URL to match your Flask server's port
                 // If Flask is running on port 5000, use: http://localhost:5000/api/entries
                 // If Flask is running on port 5001, use: http://localhost:5001/api/entries
-                const response = await fetch('http://localhost:5001/api/entries');
+                const response = await fetch('http://localhost:5000/api/entries');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
