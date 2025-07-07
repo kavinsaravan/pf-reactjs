@@ -6,6 +6,7 @@ const Transactions = () => {
     const [error, setError] = useState(null);
     const [showAlert, setShowAlert] = useState(false);
     const [selectedDescription, setSelectedDescription] = useState('');
+    const [message, setMessage] = useState(null);
 
     useEffect(() => {
         // Fetch data from your API endpoint that connects to MongoDB
@@ -33,13 +34,53 @@ const Transactions = () => {
         fetchData();
     }, []);
 
-    const handleButtonClick = (description) => {
+    const oldhandleButtonClick = (description) => {
         setSelectedDescription(description);
         setShowAlert(true);
         // Auto-hide the alert after 3 seconds
         setTimeout(() => {
             setShowAlert(false);
         }, 3000);
+    };
+
+    const handleButtonClick = async (entry) => {
+        setLoading(true);
+        setError(null);
+        setSelectedDescription(null);
+        setShowAlert(false);
+
+
+        try {
+            const response = await fetch('http://localhost:5000/api/check_transaction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add other headers like authorization if needed
+                    // 'Authorization': 'Bearer your-token'
+                },
+                body: JSON.stringify({
+                    category: entry.category,
+                    description: entry.description,
+                    amount: entry.amount
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
+            setShowAlert(true);
+            setSelectedDescription(JSON.stringify(data));
+            // Handle success (update state, show message, etc.)
+
+        } catch (error) {
+            console.error('Error:', error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (loading) {
@@ -125,7 +166,7 @@ const Transactions = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                             <button
-                                                onClick={() => handleButtonClick(entry.description)}
+                                                onClick={() => handleButtonClick(entry)}
                                                 className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
                                             >
                                                 Select

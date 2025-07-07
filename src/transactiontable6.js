@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
-const Tr = () => {
+const Transaction6 = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showAlert, setShowAlert] = useState(false);
+    const [selectedDescription, setSelectedDescription] = useState('');
 
     useEffect(() => {
         // Fetch data from your API endpoint that connects to MongoDB
         const fetchData = async () => {
             try {
                 // Update this URL to match your Flask server's port
-                const response = await fetch('http://localhost:5007/api/entries');
+                // If Flask is running on port 5000, use: http://localhost:5000/api/entries
+                // If Flask is running on port 5001, use: http://localhost:5001/api/entries
+                const response = await fetch('http://localhost:5000/api/entries');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -30,7 +33,8 @@ const Tr = () => {
         fetchData();
     }, []);
 
-    const handleButtonClick = () => {
+    const handleButtonClick = (description) => {
+        setSelectedDescription(description);
         setShowAlert(true);
         // Auto-hide the alert after 3 seconds
         setTimeout(() => {
@@ -69,11 +73,8 @@ const Tr = () => {
                 {/* Alert Pop-up */}
                 {showAlert && (
                     <div className="fixed top-4 right-4 z-50 animate-fade-in">
-                        <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-2">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className="font-medium">This transaction has been chosen</span>
+                        <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg">
+                            <span className="font-medium">{selectedDescription}</span>
                         </div>
                     </div>
                 )}
@@ -123,14 +124,12 @@ const Tr = () => {
                                             ${Number(entry.amount).toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            {index === 0 ? (
-                                                <button
-                                                    onClick={handleButtonClick}
-                                                    className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
-                                                >
-                                                    Select
-                                                </button>
-                                            ) : null}
+                                            <button
+                                                onClick={() => handleButtonClick(entry.description)}
+                                                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
+                                            >
+                                                Select
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -144,4 +143,4 @@ const Tr = () => {
     );
 };
 
-export default Tr;
+export default Transaction6;
