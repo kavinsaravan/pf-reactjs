@@ -7,15 +7,20 @@ const Transactions = () => {
     const [showAlert, setShowAlert] = useState(false);
     const [selectedDescription, setSelectedDescription] = useState('');
     const [message, setMessage] = useState(null);
+    const baseURL = 'http://127.0.0.1:7777';
 
     useEffect(() => {
         // Fetch data from your API endpoint that connects to MongoDB
         const fetchData = async () => {
             try {
                 // Update this URL to match your Flask server's port
-                // If Flask is running on port 5000, use: http://localhost:5000/api/entries
-                // If Flask is running on port 5001, use: http://localhost:5001/api/entries
-                const response = await fetch('http://localhost:5000/api/entries');
+                /*const response = await fetch('http://127.0.0.1:7777/api/entries', {
+                    method: 'GET',
+                    credentials: 'same-origin'  // or 'same-origin' if appropriate
+                });*/
+                const response = await fetch(baseURL + '/api/entries', {
+                    method: 'GET',
+                });
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -51,7 +56,7 @@ const Transactions = () => {
 
 
         try {
-            const response = await fetch('http://localhost:5000/api/check_transaction', {
+            const response = await fetch(baseURL + '/api/check_transaction', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
