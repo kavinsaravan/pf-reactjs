@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const Trr = () => {
+const Transaction6 = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showAlert, setShowAlert] = useState(false);
+    const [selectedDescription, setSelectedDescription] = useState('');
 
     useEffect(() => {
         // Fetch data from your API endpoint that connects to MongoDB
@@ -13,7 +14,7 @@ const Trr = () => {
                 // Update this URL to match your Flask server's port
                 // If Flask is running on port 5000, use: http://localhost:5000/api/entries
                 // If Flask is running on port 5001, use: http://localhost:5001/api/entries
-                const response = await fetch('http://localhost:5002/api/entries');
+                const response = await fetch('http://localhost:5000/api/entries');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -32,7 +33,8 @@ const Trr = () => {
         fetchData();
     }, []);
 
-    const handleButtonClick = () => {
+    const handleButtonClick = (description) => {
+        setSelectedDescription(description);
         setShowAlert(true);
         // Auto-hide the alert after 3 seconds
         setTimeout(() => {
@@ -72,7 +74,7 @@ const Trr = () => {
                 {showAlert && (
                     <div className="fixed top-4 right-4 z-50 animate-fade-in">
                         <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg">
-                            <span className="font-medium">This transaction has been chosen</span>
+                            <span className="font-medium">{selectedDescription}</span>
                         </div>
                     </div>
                 )}
@@ -123,7 +125,7 @@ const Trr = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                             <button
-                                                onClick={handleButtonClick}
+                                                onClick={() => handleButtonClick(entry.description)}
                                                 className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
                                             >
                                                 Select
@@ -141,4 +143,4 @@ const Trr = () => {
     );
 };
 
-export default Trr;
+export default Transaction6;

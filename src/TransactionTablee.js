@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
-const T = () => {
+const Transaction = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showAlert, setShowAlert] = useState(false);
-    const [selectedDescription, setSelectedDescription] = useState('');
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
+    const [suggestedCategory, setSuggestedCategory] = useState('');
+    const [isCategorizing, setIsCategorizing] = useState(false);
+    const baseURL = 'http://127.0.0.1:5000';
+
 
     // DataTable features
     const [currentPage, setCurrentPage] = useState(1);
@@ -17,7 +21,8 @@ const T = () => {
         const fetchData = async () => {
             try {
                 // Update this URL to match your Flask server's port
-                const response = await fetch('http://localhost:5001/api/entries');
+                //const response = await fetch('http://localhost:5000/api/entries');
+                const response = await fetch(baseURL + '/api/entries');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -36,12 +41,39 @@ const T = () => {
         fetchData();
     }, []);
 
-    const handleButtonClick = (description) => {
-        setSelectedDescription(description);
+    const handleButtonClick = async (entry) => {
+        setSelectedTransaction(entry);
+        setSuggestedCategory('');
         setShowAlert(true);
+        setIsCategorizing(true);
+
+        try {
+            // Call the categorize API endpoint
+            const response = await fetch(baseURL + '/api/categorize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ description: entry.description })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to categorize');
+            }
+
+            const result = await response.json();
+            setSuggestedCategory(result.suggested_category);
+        } catch (error) {
+            console.error('Error categorizing transaction:', error);
+            setSuggestedCategory('Error determining category');
+        } finally {
+            setIsCategorizing(false);
+        }
+
+        // Keep the alert open longer to see the AI response
         setTimeout(() => {
             setShowAlert(false);
-        }, 3000);
+        }, 6000);
     };
 
     // Sorting functionality
@@ -176,9 +208,9 @@ const T = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Alert Pop-up */}
-                {showAlert && (
+                {showAlert && selectedTransaction && (
                     <div className="fixed top-4 right-4 z-50 animate-slide-in">
-                        <div className="bg-white rounded-lg shadow-2xl p-6 max-w-sm border border-gray-100">
+                        <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md border border-gray-100">
                             <div className="flex items-start">
                                 <div className="flex-shrink-0">
                                     <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -188,8 +220,58 @@ const T = () => {
                                     </div>
                                 </div>
                                 <div className="ml-3 flex-1">
-                                    <p className="text-sm font-medium text-gray-900">Transaction Selected</p>
-                                    <p className="mt-1 text-sm text-gray-500">{selectedDescription}</p>
+                                    <p className="text-sm font-medium text-gray-900">Transaction Analysis</p>
+                                    <p className="mt-1 text-sm text-gray-500">{selectedTransaction.description}</p>
+
+                                    <div className="mt-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-gray-500">Current Category:</span>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(selectedTransaction.category)}`}>
+                        {selectedTransaction.category}
+                      </span>
+                                        </div>
+
+                                        <div className="pt-2 border-t border-gray-200">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-medium text-gray-500">AI Suggested:</span>
+                                                {isCategorizing ? (
+                                                    <div className="flex items-center">
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                                                        <span className="ml-2 text-xs text-gray-500">Analyzing...</span>
+                                                    </div>
+                                                ) : suggestedCategory ? (
+                                                    <div className="flex items-center">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                suggestedCategory === selectedTransaction.category
+                                    ? 'bg-green-100 text-green-800'
+                                    : getCategoryColor(suggestedCategory)
+                            }`}>
+                              {suggestedCategory}
+                            </span>
+                                                        {suggestedCategory === selectedTransaction.category && (
+                                                            <svg className="w-4 h-4 ml-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                            {suggestedCategory && suggestedCategory !== selectedTransaction.category && (
+                                                <p className="text-xs text-amber-600 mt-1">
+                                                    ⚠️ Category mismatch detected
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-3 pt-2 border-t border-gray-200">
+                                        <p className="text-xs text-gray-400 flex items-center">
+                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                            Powered by OpenAI
+                                        </p>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => setShowAlert(false)}
@@ -337,7 +419,7 @@ const T = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                             <button
-                                                onClick={() => handleButtonClick(entry.description)}
+                                                onClick={() => handleButtonClick(entry)}
                                                 className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150"
                                             >
                                                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -460,4 +542,4 @@ const T = () => {
     );
 };
 
-export default T;
+export default Transaction;
