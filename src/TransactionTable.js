@@ -51,7 +51,7 @@ const Transactions = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ description: entry.description })
+                body: JSON.stringify({ merchant: entry.merchant })
             });
 
             if (!response.ok) {
@@ -81,7 +81,7 @@ const Transactions = () => {
     const filteredData = data.filter(item => {
         const searchLower = searchTerm.toLowerCase();
         return (
-            item.description?.toLowerCase().includes(searchLower) ||
+            item.merchant?.toLowerCase().includes(searchLower) ||
             item.category?.toLowerCase().includes(searchLower) ||
             item.amount?.toString().includes(searchTerm) ||
             new Date(item.date).toLocaleDateString().includes(searchTerm)
@@ -154,7 +154,7 @@ const Transactions = () => {
                         <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg max-w-md">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
-                                    <div className="font-medium mb-2">{selectedTransaction.description}</div>
+                                    <div className="font-medium mb-2">{selectedTransaction.merchant}</div>
                                     <div className="text-sm">
                                         <div>Current Category: {selectedTransaction.category}</div>
                                         <div className="mt-2">
@@ -226,9 +226,9 @@ const Transactions = () => {
                                 </th>
                                 <th
                                     className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
-                                    onClick={() => handleSort('description')}
+                                    onClick={() => handleSort('merchant')}
                                 >
-                                    Description <SortIcon column="description" />
+                                    Merchant <SortIcon column="merchant" />
                                 </th>
                                 <th
                                     className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
@@ -261,7 +261,7 @@ const Transactions = () => {
                                             {new Date(entry.date).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
-                                            {entry.description}
+                                            {entry.merchant}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
