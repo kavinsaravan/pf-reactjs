@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Transaction = () => {
+const Transactionss = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -8,8 +8,6 @@ const Transaction = () => {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [suggestedCategory, setSuggestedCategory] = useState('');
     const [isCategorizing, setIsCategorizing] = useState(false);
-    const baseURL = 'http://127.0.0.1:5000';
-
 
     // DataTable features
     const [currentPage, setCurrentPage] = useState(1);
@@ -21,8 +19,7 @@ const Transaction = () => {
         const fetchData = async () => {
             try {
                 // Update this URL to match your Flask server's port
-                //const response = await fetch('http://localhost:5000/api/entries');
-                const response = await fetch(baseURL + '/api/entries');
+                const response = await fetch('http://localhost:5000/api/entries');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -49,12 +46,12 @@ const Transaction = () => {
 
         try {
             // Call the categorize API endpoint
-            const response = await fetch(baseURL + '/api/categorize', {
+            const response = await fetch('http://localhost:5000/api/categorize', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ description: entry.description })
+                body: JSON.stringify({ merchant: entry.merchant })
             });
 
             if (!response.ok) {
@@ -69,11 +66,6 @@ const Transaction = () => {
         } finally {
             setIsCategorizing(false);
         }
-
-        // Keep the alert open longer to see the AI response
-        setTimeout(() => {
-            setShowAlert(false);
-        }, 6000);
     };
 
     // Sorting functionality
@@ -89,7 +81,7 @@ const Transaction = () => {
     const filteredData = data.filter(item => {
         const searchLower = searchTerm.toLowerCase();
         return (
-            item.description?.toLowerCase().includes(searchLower) ||
+            item.merchant?.toLowerCase().includes(searchLower) ||
             item.category?.toLowerCase().includes(searchLower) ||
             item.amount?.toString().includes(searchTerm) ||
             new Date(item.date).toLocaleDateString().includes(searchTerm)
@@ -121,34 +113,19 @@ const Transaction = () => {
 
     const SortIcon = ({ column }) => {
         if (sortConfig.key !== column) {
-            return (
-                <svg className="w-4 h-4 ml-1 inline-block text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                </svg>
-            );
+            return <span className="text-gray-400 ml-1">↕</span>;
         }
-        return sortConfig.direction === 'asc' ? (
-            <svg className="w-4 h-4 ml-1 inline-block text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-            </svg>
-        ) : (
-            <svg className="w-4 h-4 ml-1 inline-block text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-        );
+        return sortConfig.direction === 'asc'
+            ? <span className="text-blue-600 ml-1">↑</span>
+            : <span className="text-blue-600 ml-1">↓</span>;
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-8 h-8 bg-indigo-600 rounded-full animate-pulse"></div>
-                        </div>
-                    </div>
-                    <p className="mt-6 text-gray-600 font-medium">Loading your data...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading data...</p>
                 </div>
             </div>
         );
@@ -156,126 +133,44 @@ const Transaction = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full border border-red-100">
-                    <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-4">
-                        <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">Connection Error</h3>
-                    <p className="text-gray-600 text-center mb-4">{error}</p>
-                    <p className="text-sm text-gray-500 text-center">Please ensure your API endpoint is running and accessible.</p>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
+                    <strong className="font-bold">Error!</strong>
+                    <span className="block sm:inline"> {error}</span>
+                    <p className="mt-2 text-sm">Make sure your API endpoint is running and accessible.</p>
                 </div>
             </div>
         );
     }
 
-    // Category color mapping
-    const getCategoryColor = (category) => {
-        const colors = {
-            'Office': 'bg-blue-100 text-blue-800',
-            'Technology': 'bg-purple-100 text-purple-800',
-            'Travel': 'bg-green-100 text-green-800',
-            'Meals': 'bg-orange-100 text-orange-800',
-            'Marketing': 'bg-pink-100 text-pink-800',
-            'Utilities': 'bg-yellow-100 text-yellow-800',
-            'Education': 'bg-indigo-100 text-indigo-800',
-            'Entertainment': 'bg-red-100 text-red-800',
-        };
-        return colors[category] || 'bg-gray-100 text-gray-800';
-    };
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Transaction Management</h1>
-                            <p className="mt-1 text-sm text-gray-500">View and manage your financial transactions</p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="text-right">
-                                <p className="text-sm text-gray-500">Total Transactions</p>
-                                <p className="text-2xl font-semibold text-gray-900">{data.length}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-7xl mx-auto px-4">
+                <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Sample Data Table</h1>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Alert Pop-up */}
                 {showAlert && selectedTransaction && (
-                    <div className="fixed top-4 right-4 z-50 animate-slide-in">
-                        <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md border border-gray-100">
-                            <div className="flex items-start">
-                                <div className="flex-shrink-0">
-                                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div className="ml-3 flex-1">
-                                    <p className="text-sm font-medium text-gray-900">Transaction Analysis</p>
-                                    <p className="mt-1 text-sm text-gray-500">{selectedTransaction.description}</p>
-
-                                    <div className="mt-3 space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium text-gray-500">Current Category:</span>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(selectedTransaction.category)}`}>
-                        {selectedTransaction.category}
-                      </span>
+                    <div className="fixed top-4 right-4 z-50">
+                        <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg max-w-md">
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <div className="font-medium mb-2">{selectedTransaction.merchant}</div>
+                                    <div className="text-sm">
+                                        <div>Current Category: {selectedTransaction.category}</div>
+                                        <div className="mt-2">
+                                            AI Suggested Category: {
+                                            isCategorizing ? (
+                                                <span>Analyzing...</span>
+                                            ) : (
+                                                <span className="font-bold">{suggestedCategory}</span>
+                                            )
+                                        }
                                         </div>
-
-                                        <div className="pt-2 border-t border-gray-200">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-gray-500">AI Suggested:</span>
-                                                {isCategorizing ? (
-                                                    <div className="flex items-center">
-                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                                                        <span className="ml-2 text-xs text-gray-500">Analyzing...</span>
-                                                    </div>
-                                                ) : suggestedCategory ? (
-                                                    <div className="flex items-center">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                                suggestedCategory === selectedTransaction.category
-                                    ? 'bg-green-100 text-green-800'
-                                    : getCategoryColor(suggestedCategory)
-                            }`}>
-                              {suggestedCategory}
-                            </span>
-                                                        {suggestedCategory === selectedTransaction.category && (
-                                                            <svg className="w-4 h-4 ml-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                            {suggestedCategory && suggestedCategory !== selectedTransaction.category && (
-                                                <p className="text-xs text-amber-600 mt-1">
-                                                    ⚠️ Category mismatch detected
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-3 pt-2 border-t border-gray-200">
-                                        <p className="text-xs text-gray-400 flex items-center">
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                            </svg>
-                                            Powered by OpenAI
-                                        </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setShowAlert(false)}
-                                    className="ml-4 text-gray-400 hover:text-gray-500"
+                                    className="ml-4 text-white hover:text-gray-200"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -286,37 +181,20 @@ const Transaction = () => {
                     </div>
                 )}
 
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-lg shadow-lg">
                     {/* Search and Controls */}
-                    <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+                    <div className="p-4 border-b border-gray-200">
                         <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-4 flex-1">
-                                <div className="relative flex-1 max-w-md">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        placeholder="Search transactions..."
-                                        className="pl-10 pr-4 py-2.5 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                    {searchTerm && (
-                                        <button
-                                            onClick={() => setSearchTerm('')}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                        >
-                                            <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    )}
-                                </div>
+                            <div className="flex items-center gap-4">
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                                 <select
-                                    className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={rowsPerPage}
                                     onChange={(e) => {
                                         setRowsPerPage(Number(e.target.value));
@@ -329,10 +207,8 @@ const Transaction = () => {
                                     <option value={50}>50 rows</option>
                                 </select>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span className="bg-gray-100 px-3 py-1 rounded-full font-medium">
-                  {sortedData.length} results
-                </span>
+                            <div className="text-sm text-gray-600">
+                                Showing {startIndex + 1} to {Math.min(endIndex, sortedData.length)} of {sortedData.length} entries
                             </div>
                         </div>
                     </div>
@@ -340,93 +216,67 @@ const Transaction = () => {
                     {/* Table */}
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <thead className="bg-gray-100 border-b border-gray-200">
                             <tr>
                                 <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                    className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
                                     onClick={() => handleSort('date')}
                                 >
-                                    <div className="flex items-center">
-                                        Date <SortIcon column="date" />
-                                    </div>
+                                    Date <SortIcon column="date" />
                                 </th>
                                 <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleSort('description')}
+                                    className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
+                                    onClick={() => handleSort('merchant')}
                                 >
-                                    <div className="flex items-center">
-                                        Description <SortIcon column="description" />
-                                    </div>
+                                    Merchant <SortIcon column="merchant" />
                                 </th>
                                 <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                    className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
                                     onClick={() => handleSort('category')}
                                 >
-                                    <div className="flex items-center">
-                                        Category <SortIcon column="category" />
-                                    </div>
+                                    Category <SortIcon column="category" />
                                 </th>
                                 <th
-                                    className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                    className="px-6 py-4 text-right text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
                                     onClick={() => handleSort('amount')}
                                 >
-                                    <div className="flex items-center justify-end">
-                                        Amount <SortIcon column="amount" />
-                                    </div>
+                                    Amount <SortIcon column="amount" />
                                 </th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Actions
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                                    Action
                                 </th>
                             </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
+                            <tbody className="divide-y divide-gray-200">
                             {currentData.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-16 text-center">
-                                        <div className="flex flex-col items-center">
-                                            <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            <p className="text-gray-500 text-lg font-medium">No transactions found</p>
-                                            <p className="text-gray-400 text-sm mt-1">Try adjusting your search criteria</p>
-                                        </div>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                                        No data found
                                     </td>
                                 </tr>
                             ) : (
                                 currentData.map((entry, index) => (
-                                    <tr key={entry._id || index} className="hover:bg-gray-50 transition-all duration-150">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">
-                                                {new Date(entry.date).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })}
-                                            </div>
+                                    <tr key={entry._id || index} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {new Date(entry.date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900 font-medium">{entry.description}</div>
+                                        <td className="px-6 py-4 text-sm text-gray-900">
+                                            {entry.merchant}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(entry.category)}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {entry.category}
                         </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <div className="text-sm font-semibold text-gray-900">
-                                                ${Number(entry.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </div>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                                            ${Number(entry.amount).toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                             <button
                                                 onClick={() => handleButtonClick(entry)}
-                                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150"
+                                                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
                                             >
-                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                                View
+                                                Select
                                             </button>
                                         </td>
                                     </tr>
@@ -437,109 +287,77 @@ const Transaction = () => {
                     </div>
 
                     {/* Pagination */}
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div className="px-6 py-4 border-t border-gray-200">
                         <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-700">
-                                Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                                <span className="font-medium">{Math.min(endIndex, sortedData.length)}</span> of{' '}
-                                <span className="font-medium">{sortedData.length}</span> results
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                                    currentPage === 1
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                }`}
+                            >
+                                Previous
+                            </button>
+
+                            <div className="flex items-center gap-2">
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum;
+                                    if (totalPages <= 5) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        pageNum = totalPages - 4 + i;
+                                    } else {
+                                        pageNum = currentPage - 2 + i;
+                                    }
+
+                                    return (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={`px-3 py-1 text-sm font-medium rounded-lg ${
+                                                currentPage === pageNum
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                            }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+                                {totalPages > 5 && currentPage < totalPages - 2 && (
+                                    <>
+                                        <span className="text-gray-400">...</span>
+                                        <button
+                                            onClick={() => setCurrentPage(totalPages)}
+                                            className="px-3 py-1 text-sm font-medium rounded-lg bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                                        >
+                                            {totalPages}
+                                        </button>
+                                    </>
+                                )}
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                    disabled={currentPage === 1}
-                                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
-                                        currentPage === 1
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400'
-                                    }`}
-                                >
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    Previous
-                                </button>
-
-                                <div className="flex items-center gap-1">
-                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                        let pageNum;
-                                        if (totalPages <= 5) {
-                                            pageNum = i + 1;
-                                        } else if (currentPage <= 3) {
-                                            pageNum = i + 1;
-                                        } else if (currentPage >= totalPages - 2) {
-                                            pageNum = totalPages - 4 + i;
-                                        } else {
-                                            pageNum = currentPage - 2 + i;
-                                        }
-
-                                        return (
-                                            <button
-                                                key={i}
-                                                onClick={() => setCurrentPage(pageNum)}
-                                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
-                                                    currentPage === pageNum
-                                                        ? 'bg-indigo-600 text-white'
-                                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400'
-                                                }`}
-                                            >
-                                                {pageNum}
-                                            </button>
-                                        );
-                                    })}
-                                    {totalPages > 5 && currentPage < totalPages - 2 && (
-                                        <>
-                                            <span className="text-gray-400 px-2">...</span>
-                                            <button
-                                                onClick={() => setCurrentPage(totalPages)}
-                                                className="px-3 py-2 text-sm font-medium rounded-lg bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400 transition-all duration-150"
-                                            >
-                                                {totalPages}
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
-                                        currentPage === totalPages
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400'
-                                    }`}
-                                >
-                                    Next
-                                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                                    currentPage === totalPages
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                }`}
+                            >
+                                Next
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {/* Add custom animation styles */}
-            <style jsx>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
         </div>
     );
 };
 
-export default Transaction;
+export default Transactionss;

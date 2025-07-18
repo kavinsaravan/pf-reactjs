@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
+
 const Transactions = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -8,6 +9,7 @@ const Transactions = () => {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [suggestedCategory, setSuggestedCategory] = useState('');
     const [isCategorizing, setIsCategorizing] = useState(false);
+    const [recommendedCategories, setRecommendedCategories] = useState({});
 
     // DataTable features
     const [currentPage, setCurrentPage] = useState(1);
@@ -51,7 +53,7 @@ const Transactions = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ merchant: entry.merchant })
+                body: JSON.stringify({ description: entry.description })
             });
 
             if (!response.ok) {
@@ -60,6 +62,14 @@ const Transactions = () => {
 
             const result = await response.json();
             setSuggestedCategory(result.suggested_category);
+
+            // Update recommended categories if different from current category
+            if (result.suggested_category && result.suggested_category !== entry.category) {
+                setRecommendedCategories(prev => ({
+                    ...prev,
+                    [entry._id || `${entry.date}-${entry.description}`]: result.suggested_category
+                }));
+            }
         } catch (error) {
             console.error('Error categorizing transaction:', error);
             setSuggestedCategory('Error determining category');
@@ -81,7 +91,7 @@ const Transactions = () => {
     const filteredData = data.filter(item => {
         const searchLower = searchTerm.toLowerCase();
         return (
-            item.merchant?.toLowerCase().includes(searchLower) ||
+            item.description?.toLowerCase().includes(searchLower) ||
             item.category?.toLowerCase().includes(searchLower) ||
             item.amount?.toString().includes(searchTerm) ||
             new Date(item.date).toLocaleDateString().includes(searchTerm)
@@ -146,7 +156,7 @@ const Transactions = () => {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-7xl mx-auto px-4">
-                <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Sample Data Table</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Financial Transaction Categorizer</h1>
 
                 {/* Alert Pop-up */}
                 {showAlert && selectedTransaction && (
@@ -154,7 +164,7 @@ const Transactions = () => {
                         <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg max-w-md">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
-                                    <div className="font-medium mb-2">{selectedTransaction.merchant}</div>
+                                    <div className="font-medium mb-2">{selectedTransaction.description}</div>
                                     <div className="text-sm">
                                         <div>Current Category: {selectedTransaction.category}</div>
                                         <div className="mt-2">
@@ -226,15 +236,18 @@ const Transactions = () => {
                                 </th>
                                 <th
                                     className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
-                                    onClick={() => handleSort('merchant')}
+                                    onClick={() => handleSort('description')}
                                 >
-                                    Merchant <SortIcon column="merchant" />
+                                    Description <SortIcon column="description" />
                                 </th>
                                 <th
                                     className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
                                     onClick={() => handleSort('category')}
                                 >
                                     Category <SortIcon column="category" />
+                                </th>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                                    Recommended Category
                                 </th>
                                 <th
                                     className="px-6 py-4 text-right text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
@@ -250,7 +263,7 @@ const Transactions = () => {
                             <tbody className="divide-y divide-gray-200">
                             {currentData.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                                         No data found
                                     </td>
                                 </tr>
@@ -261,12 +274,19 @@ const Transactions = () => {
                                             {new Date(entry.date).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
-                                            {entry.merchant}
+                                            {entry.description}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {entry.category}
                         </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {recommendedCategories[entry._id || `${entry.date}-${entry.description}`] && (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {recommendedCategories[entry._id || `${entry.date}-${entry.description}`]}
+                          </span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                                             ${Number(entry.amount).toFixed(2)}
