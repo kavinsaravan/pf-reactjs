@@ -1,4 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import {
+    Box,
+    Typography,
+    CircularProgress,
+    Alert,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    MenuItem,
+    Select,
+    InputLabel,
+    FormControl,
+    Paper,
+    TablePagination,
+    IconButton,
+} from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import CloseIcon from '@mui/icons-material/Close';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import SortIcon from '@mui/icons-material/Sort';
 
 const Transactions = () => {
     const [data, setData] = useState([]);
@@ -8,9 +32,7 @@ const Transactions = () => {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [suggestedCategory, setSuggestedCategory] = useState('');
     const [isCategorizing, setIsCategorizing] = useState(false);
-
-    // DataTable features
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [searchTerm, setSearchTerm] = useState('');
@@ -18,13 +40,10 @@ const Transactions = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Update this URL to match your Flask server's port
                 const response = await fetch('http://localhost:5000/api/entries');
-
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
                 const result = await response.json();
                 setData(result);
                 setLoading(false);
@@ -34,7 +53,6 @@ const Transactions = () => {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, []);
 
@@ -43,21 +61,17 @@ const Transactions = () => {
         setSuggestedCategory('');
         setShowAlert(true);
         setIsCategorizing(true);
-
         try {
-            // Call the categorize API endpoint
             const response = await fetch('http://localhost:5000/api/categorize', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ merchant: entry.merchant })
+                body: JSON.stringify({ merchant: entry.merchant }),
             });
-
             if (!response.ok) {
                 throw new Error('Failed to categorize');
             }
-
             const result = await response.json();
             setSuggestedCategory(result.suggested_category);
         } catch (error) {
@@ -68,7 +82,6 @@ const Transactions = () => {
         }
     };
 
-    // Sorting functionality
     const handleSort = (key) => {
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -77,8 +90,7 @@ const Transactions = () => {
         setSortConfig({ key, direction });
     };
 
-    // Filter data based on search term
-    const filteredData = data.filter(item => {
+    const filteredData = data.filter((item) => {
         const searchLower = searchTerm.toLowerCase();
         return (
             item.merchant?.toLowerCase().includes(searchLower) ||
@@ -88,275 +100,248 @@ const Transactions = () => {
         );
     });
 
-    // Sort data
     const sortedData = [...filteredData].sort((a, b) => {
         if (!sortConfig.key) return 0;
-
         const aValue = sortConfig.key === 'date' ? new Date(a[sortConfig.key]) : a[sortConfig.key];
         const bValue = sortConfig.key === 'date' ? new Date(b[sortConfig.key]) : b[sortConfig.key];
-
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
     });
 
-    // Pagination
-    const totalPages = Math.ceil(sortedData.length / rowsPerPage);
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    const endIndex = startIndex + rowsPerPage;
-    const currentData = sortedData.slice(startIndex, endIndex);
-
-    // Reset to first page when search changes
     useEffect(() => {
-        setCurrentPage(1);
+        setCurrentPage(0);
     }, [searchTerm]);
 
-    const SortIcon = ({ column }) => {
+    const SortIconComponent = ({ column }) => {
         if (sortConfig.key !== column) {
-            return <span className="text-gray-400 ml-1">↕</span>;
+            return <SortIcon sx={{ color: 'grey.500', ml: 1 }} />;
         }
-        return sortConfig.direction === 'asc'
-            ? <span className="text-blue-600 ml-1">↑</span>
-            : <span className="text-blue-600 ml-1">↓</span>;
+        return sortConfig.direction === 'asc' ? (
+            <ArrowUpwardIcon sx={{ color: 'primary.main', ml: 1 }} />
+        ) : (
+            <ArrowDownwardIcon sx={{ color: 'primary.main', ml: 1 }} />
+        );
     };
+
+    const columns = [
+        {
+            field: 'date',
+            headerName: 'Date',
+            width: 150,
+            renderHeader: () => (
+                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort('date')}>
+                    <Typography variant="subtitle2">Date</Typography>
+                    <SortIconComponent column="date" />
+                </Box>
+            ),
+            renderCell: (params) => new Date(params.value).toLocaleDateString(),
+        },
+        {
+            field: 'merchant',
+            headerName: 'Merchant',
+            flex: 1,
+            minWidth: 200,
+            renderHeader: () => (
+                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort('merchant')}>
+                    <Typography variant="subtitle2">Merchant</Typography>
+                    <SortIconComponent column="merchant" />
+                </Box>
+            ),
+        },
+        {
+            field: 'category',
+            headerName: 'Category',
+            width: 150,
+            renderHeader: () => (
+                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort('category')}>
+                    <Typography variant="subtitle2">Category</Typography>
+                    <SortIconComponent column="category" />
+                </Box>
+            ),
+            renderCell: (params) => (
+                <Typography variant="body2">{params.value}</Typography>
+            ),
+        },
+        {
+            field: 'amount',
+            headerName: 'Amount',
+            width: 150,
+            type: 'number',
+            renderHeader: () => (
+                <Box
+                    sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', justifyContent: 'flex-end' }}
+                    onClick={() => handleSort('amount')}
+                >
+                    <Typography variant="subtitle2">Amount</Typography>
+                    <SortIconComponent column="amount" />
+                </Box>
+            ),
+            renderCell: (params) => `$${Number(params.value).toFixed(2)}`,
+            align: 'right',
+        },
+        {
+            field: 'action',
+            headerName: 'Action',
+            width: 120,
+            sortable: false,
+            renderCell: (params) => (
+                <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => handleButtonClick(params.row)}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Select
+                </Button>
+            ),
+            align: 'center',
+        },
+    ];
+
+    const rows = sortedData.map((entry, index) => ({
+        id: entry._id || index,
+        date: entry.date,
+        merchant: entry.merchant,
+        category: entry.category,
+        amount: entry.amount,
+    }));
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading data...</p>
-                </div>
-            </div>
+            <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50' }}>
+                <Box sx={{ textAlign: 'center' }}>
+                    <CircularProgress />
+                    <Typography sx={{ mt: 2, color: 'text.secondary' }}>Loading data...</Typography>
+                </Box>
+            </Box>
         );
     }
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
-                    <strong className="font-bold">Error!</strong>
-                    <span className="block sm:inline"> {error}</span>
-                    <p className="mt-2 text-sm">Make sure your API endpoint is running and accessible.</p>
-                </div>
-            </div>
+            <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50' }}>
+                <Alert severity="error" sx={{ maxWidth: '400px' }}>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                        Error!
+                    </Typography>
+                    <Typography>{error}</Typography>
+                    <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                        Make sure your API endpoint is running and accessible.
+                    </Typography>
+                </Alert>
+            </Box>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="max-w-7xl mx-auto px-4">
-                <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Sample Data Table</h1>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
+            <Box sx={{ maxWidth: '1400px', mx: 'auto', px: 2, width: '100%' }}>
+                <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                    Financial Transaction Categorizer
+                </Typography>
 
-                {/* Alert Pop-up */}
-                {showAlert && selectedTransaction && (
-                    <div className="fixed top-4 right-4 z-50">
-                        <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg max-w-md">
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                    <div className="font-medium mb-2">{selectedTransaction.merchant}</div>
-                                    <div className="text-sm">
-                                        <div>Current Category: {selectedTransaction.category}</div>
-                                        <div className="mt-2">
-                                            AI Suggested Category: {
-                                            isCategorizing ? (
-                                                <span>Analyzing...</span>
-                                            ) : (
-                                                <span className="font-bold">{suggestedCategory}</span>
-                                            )
-                                        }
-                                        </div>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setShowAlert(false)}
-                                    className="ml-4 text-white hover:text-gray-200"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <Dialog open={showAlert} onClose={() => setShowAlert(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle>
+                        {selectedTransaction?.merchant}
+                        <IconButton
+                            aria-label="close"
+                            onClick={() => setShowAlert(false)}
+                            sx={{ position: 'absolute', right: 8, top: 8, color: 'grey.500' }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </DialogTitle>
+                    <DialogContent>
+                        <Typography variant="body2" gutterBottom>
+                            Current Category: {selectedTransaction?.category}
+                        </Typography>
+                        <Typography variant="body2">
+                            AI Suggested Category:{' '}
+                            {isCategorizing ? (
+                                <span>Analyzing...</span>
+                            ) : (
+                                <Typography component="span" fontWeight="bold">
+                                    {suggestedCategory}
+                                </Typography>
+                            )}
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setShowAlert(false)}>Close</Button>
+                    </DialogActions>
+                </Dialog>
 
-                <div className="bg-white rounded-lg shadow-lg">
-                    {/* Search and Controls */}
-                    <div className="p-4 border-b border-gray-200">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                                <select
-                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: '300px' }}>
+                            <TextField
+                                label="Search"
+                                variant="outlined"
+                                size="small"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                sx={{ minWidth: '200px' }}
+                            />
+                            <FormControl size="small" sx={{ minWidth: '120px' }}>
+                                <InputLabel>Rows per page</InputLabel>
+                                <Select
                                     value={rowsPerPage}
+                                    label="Rows per page"
                                     onChange={(e) => {
                                         setRowsPerPage(Number(e.target.value));
-                                        setCurrentPage(1);
+                                        setCurrentPage(0);
                                     }}
                                 >
-                                    <option value={5}>5 rows</option>
-                                    <option value={10}>10 rows</option>
-                                    <option value={25}>25 rows</option>
-                                    <option value={50}>50 rows</option>
-                                </select>
-                            </div>
-                            <div className="text-sm text-gray-600">
-                                Showing {startIndex + 1} to {Math.min(endIndex, sortedData.length)} of {sortedData.length} entries
-                            </div>
-                        </div>
-                    </div>
+                                    <MenuItem value={5}>5 rows</MenuItem>
+                                    <MenuItem value={10}>10 rows</MenuItem>
+                                    <MenuItem value={25}>25 rows</MenuItem>
+                                    <MenuItem value={50}>50 rows</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                            Showing {currentPage * rowsPerPage + 1} to {Math.min((currentPage + 1) * rowsPerPage, sortedData.length)} of{' '}
+                            {sortedData.length} entries
+                        </Typography>
+                    </Box>
+                </Paper>
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-100 border-b border-gray-200">
-                            <tr>
-                                <th
-                                    className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
-                                    onClick={() => handleSort('date')}
-                                >
-                                    Date <SortIcon column="date" />
-                                </th>
-                                <th
-                                    className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
-                                    onClick={() => handleSort('merchant')}
-                                >
-                                    Merchant <SortIcon column="merchant" />
-                                </th>
-                                <th
-                                    className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
-                                    onClick={() => handleSort('category')}
-                                >
-                                    Category <SortIcon column="category" />
-                                </th>
-                                <th
-                                    className="px-6 py-4 text-right text-sm font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
-                                    onClick={() => handleSort('amount')}
-                                >
-                                    Amount <SortIcon column="amount" />
-                                </th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                                    Action
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                            {currentData.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                                        No data found
-                                    </td>
-                                </tr>
-                            ) : (
-                                currentData.map((entry, index) => (
-                                    <tr key={entry._id || index} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {new Date(entry.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
-                                            {entry.merchant}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {entry.category}
-                        </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                                            ${Number(entry.amount).toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <button
-                                                onClick={() => handleButtonClick(entry)}
-                                                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
-                                            >
-                                                Select
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="px-6 py-4 border-t border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className={`px-4 py-2 text-sm font-medium rounded-lg ${
-                                    currentPage === 1
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                                }`}
-                            >
-                                Previous
-                            </button>
-
-                            <div className="flex items-center gap-2">
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                    let pageNum;
-                                    if (totalPages <= 5) {
-                                        pageNum = i + 1;
-                                    } else if (currentPage <= 3) {
-                                        pageNum = i + 1;
-                                    } else if (currentPage >= totalPages - 2) {
-                                        pageNum = totalPages - 4 + i;
-                                    } else {
-                                        pageNum = currentPage - 2 + i;
-                                    }
-
-                                    return (
-                                        <button
-                                            key={i}
-                                            onClick={() => setCurrentPage(pageNum)}
-                                            className={`px-3 py-1 text-sm font-medium rounded-lg ${
-                                                currentPage === pageNum
-                                                    ? 'bg-blue-500 text-white'
-                                                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                                            }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
-                                {totalPages > 5 && currentPage < totalPages - 2 && (
-                                    <>
-                                        <span className="text-gray-400">...</span>
-                                        <button
-                                            onClick={() => setCurrentPage(totalPages)}
-                                            className="px-3 py-1 text-sm font-medium rounded-lg bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                                        >
-                                            {totalPages}
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages}
-                                className={`px-4 py-2 text-sm font-medium rounded-lg ${
-                                    currentPage === totalPages
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                                }`}
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                <Paper elevation={3} sx={{ width: '100%' }}>
+                    <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        pageSize={rowsPerPage}
+                        rowsPerPageOptions={[5, 10, 25, 50]}
+                        page={currentPage}
+                        onPageChange={(newPage) => setCurrentPage(newPage)}
+                        rowCount={sortedData.length}
+                        autoHeight
+                        disableSelectionOnClick
+                        sx={{
+                            '& .MuiDataGrid-cell': { py: 1 },
+                            '& .MuiDataGrid-columnHeader': { bgcolor: 'grey.100' },
+                            '& .MuiDataGrid-row:hover': { bgcolor: 'grey.50' },
+                            width: '100%',
+                        }}
+                    />
+                    <TablePagination
+                        component="div"
+                        count={sortedData.length}
+                        page={currentPage}
+                        onPageChange={(event, newPage) => setCurrentPage(newPage)}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={(event) => {
+                            setRowsPerPage(parseInt(event.target.value, 10));
+                            setCurrentPage(0);
+                        }}
+                        rowsPerPageOptions={[5, 10, 25, 50]}
+                        labelRowsPerPage="Rows per page:"
+                        sx={{ borderTop: '1px solid', borderColor: 'grey.200', width: '100%' }}
+                    />
+                </Paper>
+            </Box>
+        </Box>
     );
 };
 
