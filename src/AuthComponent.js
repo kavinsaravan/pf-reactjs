@@ -15,7 +15,7 @@ const AuthComponent = ({ onAuthSuccess, firebaseAuth }) => {
 
         // Validation
         if (!email || !password) {
-            setError('Please fill in all fields');
+            setError('Please fill in all of the fields');
             setLoading(false);
             return;
         }

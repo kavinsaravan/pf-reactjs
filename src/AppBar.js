@@ -14,7 +14,7 @@ import { useAuth } from './AuthContext';
 const AppBar = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const { signout, user } = useAuth();
-  
+
   const getFirstName = (displayName) => {
     if (!displayName) return '';
     return displayName.split(' ')[0];
@@ -37,7 +37,7 @@ const AppBar = () => {
 
   const handleChangePassword = () => {
     handleClose();
-    alert('Change password functionality coming soon!');
+    alert('Change password functionality will be coming soon!');
   };
 
   return (
