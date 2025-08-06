@@ -37,10 +37,12 @@ const Transactions = () => {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [searchTerm, setSearchTerm] = useState('');
 
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/entries');
+                const response = await fetch(`${API_URL}/api/entries`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -62,7 +64,7 @@ const Transactions = () => {
         setShowAlert(true);
         setIsCategorizing(true);
         try {
-            const response = await fetch('http://localhost:5000/api/categorize', {
+            const response = await fetch(`${API_URL}/api/categorize`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
