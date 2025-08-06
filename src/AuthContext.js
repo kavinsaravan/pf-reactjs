@@ -13,6 +13,8 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -24,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const signin = async (email, password) => {
-    const response = await fetch('http://127.0.0.1:5000/api/signin', {
+    const response = await fetch(`${API_URL}/api/signin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signup = async (email, password, userDisplayName) => {
-    const response = await fetch('http://127.0.0.1:5000/api/signup', {
+    const response = await fetch(`${API_URL}/api/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
