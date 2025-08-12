@@ -20,7 +20,6 @@ const AppBar = () => {
     return displayName.split(' ')[0];
   };
 
-  console.log('User object:', user);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -47,13 +46,9 @@ const AppBar = () => {
           Personal Finance
         </Typography>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {user?.displayName ? (
+          {user?.displayName && (
             <Typography variant="body1" sx={{ color: 'inherit' }}>
               {getFirstName(user.displayName)}
-            </Typography>
-          ) : (
-            <Typography variant="body1" sx={{ color: 'inherit' }}>
-              Debug: {JSON.stringify(user)}
             </Typography>
           )}
           <IconButton
