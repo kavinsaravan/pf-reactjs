@@ -7,6 +7,7 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Box,
 } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
 import { useAuth } from './AuthContext';
@@ -20,7 +21,6 @@ const AppBar = () => {
     return displayName.split(' ')[0];
   };
 
-  console.log('User object:', user);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -47,13 +47,9 @@ const AppBar = () => {
           Personal Finance
         </Typography>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {user?.displayName ? (
+          {user?.displayName && (
             <Typography variant="body1" sx={{ color: 'inherit' }}>
               {getFirstName(user.displayName)}
-            </Typography>
-          ) : (
-            <Typography variant="body1" sx={{ color: 'inherit' }}>
-              Debug: {JSON.stringify(user)}
             </Typography>
           )}
           <IconButton
@@ -80,7 +76,18 @@ const AppBar = () => {
             }}
             open={Boolean(anchorEl)}
             onClose={handleClose}
+            sx={{ mt: '45px' }}
           >
+            {user && (
+              <Box sx={{ px: 2, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {user.displayName || 'No Name'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {user.email || 'No Email'}
+                </Typography>
+              </Box>
+            )}
             <MenuItem onClick={handleChangePassword}>Change Password</MenuItem>
             <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
           </Menu>

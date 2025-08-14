@@ -18,12 +18,43 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const displayName = localStorage.getItem('displayName');
     if (token) {
-      setUser({ token, displayName });
+      fetchUserProfile(token);
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
+
+  const fetchUserProfile = async (token) => {
+    try {
+      const response = await fetch(`${API_URL}/api/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+
+      const profileData = await response.json();
+      setUser({ 
+        token, 
+        displayName: profileData.display_name,
+        email: profileData.email,
+        ...profileData 
+      });
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('displayName');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const signin = async (email, password) => {
     const response = await fetch(`${API_URL}/api/signin`, {
@@ -42,15 +73,11 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
     console.log('Sign in response:', data);
     const token = data.token;
-    const displayName = data.display_name;
     
     if (token) {
       localStorage.setItem('token', token);
+      await fetchUserProfile(token);
     }
-    if (displayName) {
-      localStorage.setItem('displayName', displayName);
-    }
-    setUser({ token, email, displayName });
     
     return data;
   };
@@ -72,15 +99,11 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
     console.log('Sign up response:', data);
     const token = data.token;
-    const displayName = data.display_name;
     
     if (token) {
       localStorage.setItem('token', token);
+      await fetchUserProfile(token);
     }
-    if (displayName) {
-      localStorage.setItem('displayName', displayName);
-    }
-    setUser({ token, email, displayName });
     
     return data;
   };
