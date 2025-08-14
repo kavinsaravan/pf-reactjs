@@ -228,7 +228,7 @@ const DataTable = () => {
                                                 onClick={() => handleButtonClick(entry.description)}
                                                 className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200 text-sm"
                                             >
-                                                Select
+                                                Analyze
                                             </button>
                                         </td>
                                     </tr>

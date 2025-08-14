@@ -194,7 +194,7 @@ const Transactions = () => {
                     onClick={() => handleButtonClick(params.row)}
                     sx={{ textTransform: 'none' }}
                 >
-                    Select
+                    Analyze
                 </Button>
             ),
             align: 'center',
