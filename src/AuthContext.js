@@ -13,8 +13,9 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
+
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -40,11 +41,11 @@ export const AuthProvider = ({ children }) => {
       }
 
       const profileData = await response.json();
-      setUser({ 
-        token, 
+      setUser({
+        token,
         displayName: profileData.display_name,
         email: profileData.email,
-        ...profileData 
+        ...profileData
       });
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -73,12 +74,12 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
     console.log('Sign in response:', data);
     const token = data.token;
-    
+
     if (token) {
       localStorage.setItem('token', token);
       await fetchUserProfile(token);
     }
-    
+
     return data;
   };
 
@@ -99,12 +100,12 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
     console.log('Sign up response:', data);
     const token = data.token;
-    
+
     if (token) {
       localStorage.setItem('token', token);
       await fetchUserProfile(token);
     }
-    
+
     return data;
   };
 
