@@ -54,15 +54,14 @@ const InsightsPanel = () => {
             const responseData = await insightsResponse.json();
             console.log('Response data:', responseData);
             
-            // Extract data from the response
-            const { time_window } = responseData;
-            const { start_date, end_date } = time_window;
+            // Extract insights from the response
+            const insights = responseData.insights;
 
             setInsights({
-                query: responseData.query,
-                timeWindow: { start_date, end_date },
+                query: query,
+                timeWindow: null, // Time window not returned in current API
                 transactionCount: 0, // Not available in the simplified response
-                insights: responseData
+                insights: insights
             });
 
         } catch (err) {
@@ -87,7 +86,31 @@ const InsightsPanel = () => {
 
     const renderInsights = (insightsData) => {
         if (typeof insightsData === 'string') {
-            return <Typography variant="body1">{insightsData}</Typography>;
+            // Try to parse if it looks like JSON
+            try {
+                const parsed = JSON.parse(insightsData);
+                return (
+                    <Box>
+                        {Object.entries(parsed).map(([key, value]) => (
+                            <Box key={key} sx={{ mb: 2 }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                    {key.replace(/_/g, ' ').toUpperCase()}:
+                                </Typography>
+                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                );
+            } catch {
+                // If not JSON, display as plain text with proper formatting
+                return (
+                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {insightsData}
+                    </Typography>
+                );
+            }
         }
 
         if (typeof insightsData === 'object') {
@@ -98,7 +121,7 @@ const InsightsPanel = () => {
                             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 {key.replace(/_/g, ' ').toUpperCase()}:
                             </Typography>
-                            <Typography variant="body2">
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                                 {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
                             </Typography>
                         </Box>
@@ -154,11 +177,13 @@ const InsightsPanel = () => {
                             Results for: "{insights.query}"
                         </Typography>
                         
-                        <Box sx={{ mb: 2 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Time Period: {insights.timeWindow.start_date} to {insights.timeWindow.end_date}
-                            </Typography>
-                        </Box>
+                        {insights.timeWindow && (
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    Time Period: {insights.timeWindow.start_date} to {insights.timeWindow.end_date}
+                                </Typography>
+                            </Box>
+                        )}
 
                         <Divider sx={{ my: 2 }} />
                         
