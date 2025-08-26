@@ -273,9 +273,6 @@ const InsightsPanel = () => {
                                 Analysis Results
                             </Typography>
                         </Box>
-                        <Typography variant="h6" sx={{ opacity: 0.9, fontStyle: 'italic' }}>
-                            "{insights.query}"
-                        </Typography>
                         {insights.timeWindow && (
                             <Chip 
                                 label={`${insights.timeWindow.start_date} to ${insights.timeWindow.end_date}`}
