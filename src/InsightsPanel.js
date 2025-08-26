@@ -10,8 +10,14 @@ import {
     Card,
     CardContent,
     Divider,
+    Chip,
+    Grid,
+    Container,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import InsightsIcon from '@mui/icons-material/Insights';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 
 const InsightsPanel = () => {
     const [query, setQuery] = useState('');
@@ -84,126 +90,212 @@ const InsightsPanel = () => {
         }
     };
 
-    const renderInsights = (insightsData) => {
+    const parseInsightsContent = (insightsData) => {
         if (typeof insightsData === 'string') {
-            // Try to parse if it looks like JSON
             try {
-                const parsed = JSON.parse(insightsData);
-                return (
-                    <Box>
-                        {Object.entries(parsed).map(([key, value]) => (
-                            <Box key={key} sx={{ mb: 2 }}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                    {key.replace(/_/g, ' ').toUpperCase()}:
-                                </Typography>
-                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Box>
-                );
+                return JSON.parse(insightsData);
             } catch {
-                // If not JSON, display as plain text with proper formatting
-                return (
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {insightsData}
-                    </Typography>
-                );
+                // If not JSON, try to parse as structured text
+                return { analysis: insightsData };
             }
         }
+        return insightsData;
+    };
 
-        if (typeof insightsData === 'object') {
+    const formatSectionTitle = (key) => {
+        return key
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, l => l.toUpperCase())
+            .replace('Ai ', 'AI ');
+    };
+
+    const renderInsightSection = (title, content, icon) => (
+        <Card elevation={2} sx={{ mb: 3, borderLeft: '4px solid', borderLeftColor: 'primary.main' }}>
+            <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    {icon}
+                    <Typography variant="h6" sx={{ ml: 1, fontWeight: 600, color: 'primary.main' }}>
+                        {title}
+                    </Typography>
+                </Box>
+                <Typography 
+                    variant="body1" 
+                    sx={{ 
+                        whiteSpace: 'pre-wrap',
+                        lineHeight: 1.7,
+                        color: 'text.primary',
+                        '& strong': { fontWeight: 600 }
+                    }}
+                >
+                    {content}
+                </Typography>
+            </CardContent>
+        </Card>
+    );
+
+    const renderInsights = (insightsData) => {
+        const parsed = parseInsightsContent(insightsData);
+
+        if (typeof parsed === 'object' && parsed !== null) {
             return (
                 <Box>
-                    {Object.entries(insightsData).map(([key, value]) => (
-                        <Box key={key} sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                {key.replace(/_/g, ' ').toUpperCase()}:
-                            </Typography>
-                            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
-                            </Typography>
-                        </Box>
-                    ))}
+                    {Object.entries(parsed).map(([key, value], index) => {
+                        const icons = [
+                            <InsightsIcon key="insights" color="primary" />,
+                            <TrendingUpIcon key="trending" color="primary" />,
+                            <AnalyticsIcon key="analytics" color="primary" />
+                        ];
+                        
+                        const content = typeof value === 'object' ? 
+                            JSON.stringify(value, null, 2) : 
+                            String(value);
+
+                        return renderInsightSection(
+                            formatSectionTitle(key),
+                            content,
+                            icons[index % icons.length]
+                        );
+                    })}
                 </Box>
             );
         }
 
-        return <Typography variant="body1">{JSON.stringify(insightsData)}</Typography>;
+        // Fallback for simple string content
+        return renderInsightSection(
+            'Analysis',
+            String(parsed),
+            <InsightsIcon color="primary" />
+        );
     };
 
     return (
-        <Box sx={{ maxWidth: '800px', mx: 'auto', p: 3 }}>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-                Transaction Insights
-            </Typography>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            {/* Header Section */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+                    <AnalyticsIcon sx={{ fontSize: 32, mr: 1, color: 'primary.main' }} />
+                    <Typography 
+                        variant="h4" 
+                        sx={{ 
+                            fontWeight: 700, 
+                            background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                        }}
+                    >
+                        Financial Insights
+                    </Typography>
+                </Box>
+                <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto' }}>
+                    Get AI-powered analysis of your spending patterns and financial trends
+                </Typography>
+            </Box>
             
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            {/* Search Section */}
+            <Paper 
+                elevation={3} 
+                sx={{ 
+                    p: 4, 
+                    mb: 4,
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    borderRadius: 3
+                }}
+            >
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                     <TextField
                         fullWidth
-                        label="Ask about your transactions"
-                        placeholder="e.g., Show me my spending on food last month"
+                        label="What would you like to know about your finances?"
+                        placeholder="e.g., How much did I spend on groceries this month? What are my top spending categories?"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyPress={handleKeyPress}
                         variant="outlined"
                         multiline
-                        rows={2}
+                        rows={3}
+                        sx={{ 
+                            '& .MuiOutlinedInput-root': {
+                                backgroundColor: 'white',
+                                borderRadius: 2,
+                            }
+                        }}
                     />
                     <Button
                         variant="contained"
                         onClick={handleSearch}
                         disabled={loading || !query.trim()}
-                        startIcon={loading ? <CircularProgress size={20} /> : <SearchIcon />}
-                        sx={{ minWidth: '120px', height: 'fit-content' }}
+                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
+                        sx={{ 
+                            minWidth: '140px', 
+                            height: 'fit-content',
+                            borderRadius: 2,
+                            py: 2,
+                            background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #1565c0, #1976d2)',
+                            }
+                        }}
                     >
-                        {loading ? 'Searching' : 'Search'}
+                        {loading ? 'Analyzing...' : 'Get Insights'}
                     </Button>
                 </Box>
                 
                 {error && (
-                    <Alert severity="error" sx={{ mt: 2 }}>
+                    <Alert 
+                        severity="error" 
+                        sx={{ 
+                            mt: 3,
+                            borderRadius: 2,
+                            '& .MuiAlert-message': { fontSize: '0.95rem' }
+                        }}
+                    >
                         {error}
                     </Alert>
                 )}
             </Paper>
 
+            {/* Results Section */}
             {insights && (
-                <Card elevation={3}>
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-                            Results for: "{insights.query}"
-                        </Typography>
-                        
-                        {insights.timeWindow && (
-                            <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Time Period: {insights.timeWindow.start_date} to {insights.timeWindow.end_date}
-                                </Typography>
-                            </Box>
-                        )}
-
-                        <Divider sx={{ my: 2 }} />
-                        
-                        <Typography variant="h6" gutterBottom>
-                            Insights
-                        </Typography>
-                        
-                        <Box sx={{ 
-                            backgroundColor: 'grey.50', 
-                            p: 2, 
-                            borderRadius: 1,
-                            maxHeight: '400px',
-                            overflowY: 'auto'
-                        }}>
-                            {renderInsights(insights.insights)}
+                <Box>
+                    {/* Query Header */}
+                    <Paper 
+                        elevation={2} 
+                        sx={{ 
+                            p: 3, 
+                            mb: 3, 
+                            borderRadius: 3,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <SearchIcon sx={{ mr: 1 }} />
+                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                Analysis Results
+                            </Typography>
                         </Box>
-                    </CardContent>
-                </Card>
+                        <Typography variant="h6" sx={{ opacity: 0.9, fontStyle: 'italic' }}>
+                            "{insights.query}"
+                        </Typography>
+                        {insights.timeWindow && (
+                            <Chip 
+                                label={`${insights.timeWindow.start_date} to ${insights.timeWindow.end_date}`}
+                                sx={{ 
+                                    mt: 2, 
+                                    backgroundColor: 'rgba(255,255,255,0.2)',
+                                    color: 'white',
+                                    fontWeight: 500
+                                }}
+                            />
+                        )}
+                    </Paper>
+                    
+                    {/* Insights Content */}
+                    <Box sx={{ mt: 3 }}>
+                        {renderInsights(insights.insights)}
+                    </Box>
+                </Box>
             )}
-        </Box>
+        </Container>
     );
 };
 
