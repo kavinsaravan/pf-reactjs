@@ -42,11 +42,19 @@ const Transactions = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                console.log('Fetching transactions from:', `${API_URL}/api/entries`);
                 const response = await fetch(`${API_URL}/api/entries`);
+                console.log('Transaction response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('Transaction fetch error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
                 }
                 const result = await response.json();
+                console.log('Transaction data received:', result);
+                console.log('Number of transactions:', result.length);
+                
                 setData(result);
                 setLoading(false);
             } catch (err) {

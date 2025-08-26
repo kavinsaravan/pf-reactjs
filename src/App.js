@@ -1,13 +1,15 @@
 import './App.css';
-import React from 'react';
+import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import AuthScreen from './AuthScreen';
 import AppBar from './AppBar';
 import Transactions from "./TransactionTable.js";
-import { Box, CircularProgress } from '@mui/material';
+import InsightsPanel from './InsightsPanel.js';
+import { Box, CircularProgress, Tabs, Tab } from '@mui/material';
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState(0);
 
   if (loading) {
     return (
@@ -26,10 +28,26 @@ function AppContent() {
     return <AuthScreen />;
   }
 
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   return (
     <div className="App">
       <AppBar />
-      <Transactions />
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange} 
+          sx={{ maxWidth: '1400px', mx: 'auto', px: 2 }}
+        >
+          <Tab label="Transactions" />
+          <Tab label="Insights" />
+        </Tabs>
+      </Box>
+      
+      {activeTab === 0 && <Transactions />}
+      {activeTab === 1 && <InsightsPanel />}
     </div>
   );
 }
