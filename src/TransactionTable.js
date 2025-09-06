@@ -17,12 +17,14 @@ import {
     Paper,
     TablePagination,
     IconButton,
+    Snackbar,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import SortIcon from '@mui/icons-material/Sort';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 const Transactions = () => {
     const [data, setData] = useState([]);
@@ -36,6 +38,9 @@ const Transactions = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [searchTerm, setSearchTerm] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState('');
+    const [showUploadMessage, setShowUploadMessage] = useState(false);
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -98,6 +103,111 @@ const Transactions = () => {
             direction = 'desc';
         }
         setSortConfig({ key, direction });
+    };
+
+    const parseCSV = (csvText) => {
+        const lines = csvText.trim().split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        const transactions = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+            if (values.length === headers.length) {
+                const transaction = {};
+                headers.forEach((header, index) => {
+                    const lowerHeader = header.toLowerCase();
+                    if (lowerHeader.includes('date')) {
+                        transaction.date = values[index];
+                    } else if (lowerHeader.includes('merchant') || lowerHeader.includes('description') || lowerHeader.includes('payee')) {
+                        transaction.merchant = values[index];
+                    } else if (lowerHeader.includes('amount') || lowerHeader.includes('value')) {
+                        transaction.amount = parseFloat(values[index].replace(/[^-0-9.]/g, ''));
+                    } else if (lowerHeader.includes('category')) {
+                        transaction.category = values[index];
+                    }
+                });
+                
+                if (transaction.date && transaction.merchant && transaction.amount !== undefined) {
+                    if (!transaction.category) {
+                        transaction.category = 'Uncategorized';
+                    }
+                    transactions.push(transaction);
+                }
+            }
+        }
+        return transactions;
+    };
+
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            setUploadMessage('Please select a CSV file');
+            setShowUploadMessage(true);
+            return;
+        }
+
+        setUploading(true);
+        const reader = new FileReader();
+        
+        reader.onload = async (e) => {
+            try {
+                const csvText = e.target.result;
+                const newTransactions = parseCSV(csvText);
+                
+                if (newTransactions.length === 0) {
+                    setUploadMessage('No valid transactions found in CSV file');
+                    setShowUploadMessage(true);
+                } else {
+                    // Send transactions to API
+                    try {
+                        const response = await fetch(`${API_URL}/api/uploadcsv`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(newTransactions),
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            // Add new transactions to local state
+                            setData(prevData => [...prevData, ...newTransactions]);
+                            setUploadMessage(`Successfully uploaded ${result.inserted_count} transactions to database`);
+                            setShowUploadMessage(true);
+                        } else {
+                            console.error('API error:', result);
+                            setUploadMessage(`API Error: ${result.error}`);
+                            setShowUploadMessage(true);
+                        }
+                    } catch (apiError) {
+                        console.error('Error calling API:', apiError);
+                        // Fallback to local-only storage
+                        setData(prevData => [...prevData, ...newTransactions]);
+                        setUploadMessage(`Parsed ${newTransactions.length} transactions locally (API unavailable)`);
+                        setShowUploadMessage(true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error parsing CSV:', error);
+                setUploadMessage('Error parsing CSV file');
+                setShowUploadMessage(true);
+            } finally {
+                setUploading(false);
+                event.target.value = '';
+            }
+        };
+
+        reader.onerror = () => {
+            setUploadMessage('Error reading file');
+            setShowUploadMessage(true);
+            setUploading(false);
+            event.target.value = '';
+        };
+
+        reader.readAsText(file);
     };
 
     const filteredData = data.filter((item) => {
@@ -284,7 +394,7 @@ const Transactions = () => {
 
                 <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: '300px' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: '300px', flexWrap: 'wrap' }}>
                             <TextField
                                 label="Search"
                                 variant="outlined"
@@ -309,6 +419,28 @@ const Transactions = () => {
                                     <MenuItem value={50}>50 rows</MenuItem>
                                 </Select>
                             </FormControl>
+                            <Box sx={{ position: 'relative' }}>
+                                <input
+                                    accept=".csv"
+                                    id="csv-upload-input"
+                                    type="file"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileUpload}
+                                    disabled={uploading}
+                                />
+                                <label htmlFor="csv-upload-input">
+                                    <Button
+                                        variant="outlined"
+                                        component="span"
+                                        startIcon={<UploadFileIcon />}
+                                        disabled={uploading}
+                                        size="small"
+                                        sx={{ textTransform: 'none' }}
+                                    >
+                                        {uploading ? 'Uploading...' : 'Upload CSV'}
+                                    </Button>
+                                </label>
+                            </Box>
                         </Box>
                         <Typography variant="body2" color="text.secondary">
                             Showing {currentPage * rowsPerPage + 1} to {Math.min((currentPage + 1) * rowsPerPage, sortedData.length)} of{' '}
@@ -350,6 +482,21 @@ const Transactions = () => {
                         sx={{ borderTop: '1px solid', borderColor: 'grey.200', width: '100%' }}
                     />
                 </Paper>
+
+                <Snackbar
+                    open={showUploadMessage}
+                    autoHideDuration={4000}
+                    onClose={() => setShowUploadMessage(false)}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                >
+                    <Alert
+                        onClose={() => setShowUploadMessage(false)}
+                        severity={uploadMessage.includes('Successfully') ? 'success' : 'error'}
+                        sx={{ width: '100%' }}
+                    >
+                        {uploadMessage}
+                    </Alert>
+                </Snackbar>
             </Box>
         </Box>
     );
