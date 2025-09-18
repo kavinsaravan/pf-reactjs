@@ -44,30 +44,31 @@ const Transactions = () => {
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                console.log('Fetching transactions from:', `${API_URL}/api/entries`);
-                const response = await fetch(`${API_URL}/api/entries`);
-                console.log('Transaction response status:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Transaction fetch error:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-                }
-                const result = await response.json();
-                console.log('Transaction data received:', result);
-                console.log('Number of transactions:', result.length);
-                
-                setData(result);
-                setLoading(false);
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                setError(err.message);
-                setLoading(false);
+    const fetchData = async () => {
+        try {
+            console.log('Fetching transactions from:', `${API_URL}/api/entries`);
+            const response = await fetch(`${API_URL}/api/entries`);
+            console.log('Transaction response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Transaction fetch error:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
-        };
+            const result = await response.json();
+            console.log('Transaction data received:', result);
+            console.log('Number of transactions:', result.length);
+            
+            setData(result);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setError(err.message);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, []);
 
@@ -173,8 +174,8 @@ const Transactions = () => {
                         const result = await response.json();
                         
                         if (response.ok) {
-                            // Add new transactions to local state
-                            setData(prevData => [...prevData, ...newTransactions]);
+                            // Refresh all transactions from database
+                            await fetchData();
                             setUploadMessage(`Successfully uploaded ${result.inserted_count} transactions to database`);
                             setShowUploadMessage(true);
                         } else {
