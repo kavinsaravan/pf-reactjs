@@ -107,35 +107,86 @@ const Transactions = () => {
     };
 
     const parseCSV = (csvText) => {
-        const lines = csvText.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        console.log('Raw CSV text:', csvText.substring(0, 500)); // Log first 500 chars for debugging
+        
+        const lines = csvText.trim().split('\n').filter(line => line.trim().length > 0);
+        console.log('Number of lines:', lines.length);
+        
+        if (lines.length < 2) {
+            console.log('Not enough lines in CSV');
+            return [];
+        }
+        
+        // Handle both comma and semicolon separators
+        const separator = lines[0].includes(';') ? ';' : ',';
+        console.log('Using separator:', separator);
+        
+        const headers = lines[0].split(separator).map(h => h.trim().replace(/"/g, '').replace(/'/g, ''));
+        console.log('Headers found:', headers);
+        
         const transactions = [];
 
         for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-            if (values.length === headers.length) {
+            if (!lines[i].trim()) continue; // Skip empty lines
+            
+            const values = lines[i].split(separator).map(v => v.trim().replace(/"/g, '').replace(/'/g, ''));
+            console.log(`Line ${i} values:`, values);
+            
+            if (values.length >= headers.length - 1) { // Allow for slight length differences
                 const transaction = {};
                 headers.forEach((header, index) => {
-                    const lowerHeader = header.toLowerCase();
-                    if (lowerHeader.includes('date')) {
-                        transaction.date = values[index];
-                    } else if (lowerHeader.includes('merchant') || lowerHeader.includes('description') || lowerHeader.includes('payee')) {
-                        transaction.merchant = values[index];
-                    } else if (lowerHeader.includes('amount') || lowerHeader.includes('value')) {
-                        transaction.amount = parseFloat(values[index].replace(/[^-0-9.]/g, ''));
-                    } else if (lowerHeader.includes('category')) {
-                        transaction.category = values[index];
+                    if (index < values.length) {
+                        const lowerHeader = header.toLowerCase();
+                        const value = values[index];
+                        
+                        if (lowerHeader.includes('date') || lowerHeader.includes('transaction date') || lowerHeader.includes('posted date')) {
+                            transaction.date = value;
+                        } else if (lowerHeader.includes('merchant') || lowerHeader.includes('description') || lowerHeader.includes('payee') || lowerHeader.includes('memo') || lowerHeader.includes('details')) {
+                            transaction.merchant = value;
+                        } else if (lowerHeader.includes('amount') || lowerHeader.includes('value') || lowerHeader.includes('debit') || lowerHeader.includes('credit')) {
+                            // Handle negative amounts in parentheses or with minus sign
+                            let amountStr = value.replace(/[^-0-9.()]/g, '');
+                            if (amountStr.includes('(') && amountStr.includes(')')) {
+                                amountStr = '-' + amountStr.replace(/[()]/g, '');
+                            }
+                            const amount = parseFloat(amountStr);
+                            if (!isNaN(amount)) {
+                                transaction.amount = amount;
+                            }
+                        } else if (lowerHeader.includes('category') || lowerHeader.includes('type')) {
+                            transaction.category = value;
+                        }
                     }
                 });
                 
-                if (transaction.date && transaction.merchant && transaction.amount !== undefined) {
+                console.log('Parsed transaction:', transaction);
+                
+                // More flexible validation - at least date and either merchant or amount
+                if (transaction.date && (transaction.merchant || transaction.amount !== undefined)) {
+                    if (!transaction.merchant) {
+                        transaction.merchant = 'Unknown Merchant';
+                    }
+                    if (transaction.amount === undefined) {
+                        transaction.amount = 0;
+                    }
                     if (!transaction.category) {
                         transaction.category = 'Uncategorized';
                     }
                     transactions.push(transaction);
+                    console.log('Transaction added to list');
+                } else {
+                    console.log('Transaction validation failed:', {
+                        hasDate: !!transaction.date,
+                        hasMerchant: !!transaction.merchant,
+                        hasAmount: transaction.amount !== undefined
+                    });
                 }
+            } else {
+                console.log(`Line ${i} has ${values.length} values, expected ${headers.length}`);
             }
         }
+        
+        console.log('Total transactions parsed:', transactions.length);
         return transactions;
     };
 
