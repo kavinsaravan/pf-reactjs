@@ -36,7 +36,7 @@ const Transactions = () => {
     const [isCategorizing, setIsCategorizing] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+    const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
     const [searchTerm, setSearchTerm] = useState('');
     const [uploading, setUploading] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
