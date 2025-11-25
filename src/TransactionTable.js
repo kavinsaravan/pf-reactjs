@@ -385,6 +385,9 @@ const Transactions = () => {
                     <SortIconComponent column="merchant" />
                 </Box>
             ),
+            renderCell: (params) => (
+                <Typography variant="body2">{params.value}</Typography>
+            ),
         },
         {
             field: 'category',
