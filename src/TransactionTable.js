@@ -423,7 +423,17 @@ const Transactions = () => {
                     variant="contained"
                     size="small"
                     onClick={() => handleButtonClick(params.row)}
-                    sx={{ textTransform: 'none' }}
+                    sx={{
+                        textTransform: 'none',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        fontWeight: 600,
+                        '&:hover': {
+                            background: 'linear-gradient(135deg, #5568d3 0%, #653a8b 100%)',
+                            transform: 'translateY(-1px)',
+                            boxShadow: '0 4px 8px rgba(102, 126, 234, 0.4)',
+                        },
+                        transition: 'all 0.2s ease',
+                    }}
                 >
                     Analyze
                 </Button>
@@ -468,10 +478,21 @@ const Transactions = () => {
     }
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
+        <Box sx={{ minHeight: '100vh', py: 4 }}>
             <Box sx={{ maxWidth: '1400px', mx: 'auto', px: 2, width: '100%' }}>
-                <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 'bold', color: 'text.primary' }}>
-                    Financial Transaction Categorizer
+                <Typography
+                    variant="h4"
+                    align="center"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 800,
+                        mb: 4,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                    }}
+                >
+                    Transaction Manager
                 </Typography>
 
                 <Dialog open={showAlert} onClose={() => setShowAlert(false)} maxWidth="sm" fullWidth>
@@ -505,7 +526,17 @@ const Transactions = () => {
                     </DialogActions>
                 </Dialog>
 
-                <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+                <Paper
+                    elevation={3}
+                    sx={{
+                        p: 3,
+                        mb: 3,
+                        borderRadius: 3,
+                        background: 'white',
+                        border: '1px solid',
+                        borderColor: 'rgba(102, 126, 234, 0.1)',
+                    }}
+                >
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: '300px', flexWrap: 'wrap' }}>
                             <TextField
@@ -548,7 +579,16 @@ const Transactions = () => {
                                         startIcon={<UploadFileIcon />}
                                         disabled={uploading}
                                         size="small"
-                                        sx={{ textTransform: 'none' }}
+                                        sx={{
+                                            textTransform: 'none',
+                                            borderColor: '#667eea',
+                                            color: '#667eea',
+                                            fontWeight: 600,
+                                            '&:hover': {
+                                                borderColor: '#764ba2',
+                                                backgroundColor: 'rgba(102, 126, 234, 0.04)',
+                                            },
+                                        }}
                                     >
                                         {uploading ? 'Uploading...' : 'Upload CSV'}
                                     </Button>
@@ -562,7 +602,16 @@ const Transactions = () => {
                     </Box>
                 </Paper>
 
-                <Paper elevation={3} sx={{ width: '100%' }}>
+                <Paper
+                    elevation={3}
+                    sx={{
+                        width: '100%',
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        border: '1px solid',
+                        borderColor: 'rgba(102, 126, 234, 0.1)',
+                    }}
+                >
                     <DataGrid
                         rows={rows}
                         columns={columns}
@@ -575,10 +624,25 @@ const Transactions = () => {
                         autoHeight
                         disableSelectionOnClick
                         sx={{
-                            '& .MuiDataGrid-cell': { py: 1 },
-                            '& .MuiDataGrid-columnHeader': { bgcolor: 'grey.100' },
-                            '& .MuiDataGrid-row:hover': { bgcolor: 'grey.50' },
                             width: '100%',
+                            border: 'none',
+                            '& .MuiDataGrid-cell': {
+                                py: 1.5,
+                                fontSize: '0.95rem',
+                            },
+                            '& .MuiDataGrid-columnHeader': {
+                                background: 'linear-gradient(135deg, #f8f9ff 0%, #e8ebfc 100%)',
+                                fontWeight: 700,
+                                fontSize: '0.95rem',
+                            },
+                            '& .MuiDataGrid-row:hover': {
+                                bgcolor: 'rgba(102, 126, 234, 0.04)',
+                            },
+                            '& .MuiDataGrid-row': {
+                                '&:nth-of-type(even)': {
+                                    bgcolor: 'rgba(102, 126, 234, 0.02)',
+                                },
+                            },
                         }}
                     />
                 </Paper>

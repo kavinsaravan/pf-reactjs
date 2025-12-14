@@ -174,11 +174,11 @@ const InsightsPanel = () => {
             <Box sx={{ textAlign: 'center', mb: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                     <AnalyticsIcon sx={{ fontSize: 32, mr: 1, color: 'primary.main' }} />
-                    <Typography 
-                        variant="h4" 
-                        sx={{ 
-                            fontWeight: 700, 
-                            background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                         }}
@@ -192,13 +192,15 @@ const InsightsPanel = () => {
             </Box>
             
             {/* Search Section */}
-            <Paper 
-                elevation={3} 
-                sx={{ 
-                    p: 4, 
+            <Paper
+                elevation={3}
+                sx={{
+                    p: 4,
                     mb: 4,
-                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                    borderRadius: 3
+                    background: 'linear-gradient(135deg, #f8f9ff 0%, #e8ebfc 100%)',
+                    borderRadius: 3,
+                    border: '1px solid',
+                    borderColor: 'rgba(102, 126, 234, 0.1)',
                 }}
             >
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
@@ -224,15 +226,21 @@ const InsightsPanel = () => {
                         onClick={handleSearch}
                         disabled={loading || !query.trim()}
                         startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
-                        sx={{ 
-                            minWidth: '140px', 
+                        sx={{
+                            minWidth: '140px',
                             height: 'fit-content',
                             borderRadius: 2,
                             py: 2,
-                            background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
                             '&:hover': {
-                                background: 'linear-gradient(45deg, #1565c0, #1976d2)',
-                            }
+                                background: 'linear-gradient(135deg, #5568d3 0%, #653a8b 100%)',
+                                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
+                                transform: 'translateY(-1px)',
+                            },
+                            transition: 'all 0.3s ease',
                         }}
                     >
                         {loading ? 'Analyzing...' : 'Get Insights'}
