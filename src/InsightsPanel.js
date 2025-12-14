@@ -90,13 +90,52 @@ const InsightsPanel = () => {
         }
     };
 
+    const formatValue = (value) => {
+        // Handle different types of values
+        if (typeof value === 'number') {
+            // Format as currency if it looks like money
+            if (Math.abs(value) > 0.01) {
+                return `$${value.toFixed(2)}`;
+            }
+            return value.toString();
+        }
+
+        if (typeof value === 'boolean') {
+            return value ? 'Yes' : 'No';
+        }
+
+        if (Array.isArray(value)) {
+            return value.map((item, idx) => {
+                if (typeof item === 'object') {
+                    return Object.entries(item)
+                        .map(([k, v]) => `${k}: ${formatValue(v)}`)
+                        .join(', ');
+                }
+                return formatValue(item);
+            }).join('\n• ');
+        }
+
+        if (typeof value === 'object' && value !== null) {
+            // Format object as bullet points
+            return Object.entries(value)
+                .map(([k, v]) => {
+                    const formattedKey = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    return `• ${formattedKey}: ${formatValue(v)}`;
+                })
+                .join('\n');
+        }
+
+        return String(value);
+    };
+
     const parseInsightsContent = (insightsData) => {
         if (typeof insightsData === 'string') {
             try {
-                return JSON.parse(insightsData);
+                const parsed = JSON.parse(insightsData);
+                return parsed;
             } catch {
-                // If not JSON, try to parse as structured text
-                return { analysis: insightsData };
+                // If not JSON, return as is
+                return insightsData;
             }
         }
         return insightsData;
@@ -106,24 +145,49 @@ const InsightsPanel = () => {
         return key
             .replace(/_/g, ' ')
             .replace(/\b\w/g, l => l.toUpperCase())
-            .replace('Ai ', 'AI ');
+            .replace('Ai ', 'AI ')
+            .replace('Api ', 'API ');
     };
 
     const renderInsightSection = (title, content, icon) => (
-        <Card elevation={2} sx={{ mb: 3, borderLeft: '4px solid', borderLeftColor: 'primary.main' }}>
+        <Card
+            elevation={2}
+            sx={{
+                mb: 3,
+                borderLeft: '4px solid',
+                borderLeftColor: 'primary.main',
+                borderRadius: 3,
+                overflow: 'hidden',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 24px rgba(102, 126, 234, 0.2)',
+                }
+            }}
+        >
             <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     {icon}
-                    <Typography variant="h6" sx={{ ml: 1, fontWeight: 600, color: 'primary.main' }}>
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            ml: 1,
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                        }}
+                    >
                         {title}
                     </Typography>
                 </Box>
-                <Typography 
-                    variant="body1" 
-                    sx={{ 
+                <Typography
+                    variant="body1"
+                    sx={{
                         whiteSpace: 'pre-wrap',
-                        lineHeight: 1.7,
+                        lineHeight: 1.8,
                         color: 'text.primary',
+                        fontSize: '1rem',
                         '& strong': { fontWeight: 600 }
                     }}
                 >
@@ -136,19 +200,28 @@ const InsightsPanel = () => {
     const renderInsights = (insightsData) => {
         const parsed = parseInsightsContent(insightsData);
 
+        // If it's a simple string (narrative response), render it directly
+        if (typeof parsed === 'string') {
+            return renderInsightSection(
+                'Financial Analysis',
+                parsed,
+                <InsightsIcon sx={{ color: '#667eea', fontSize: 28 }} />
+            );
+        }
+
+        // If it's an object, format each field nicely
         if (typeof parsed === 'object' && parsed !== null) {
             return (
                 <Box>
                     {Object.entries(parsed).map(([key, value], index) => {
                         const icons = [
-                            <InsightsIcon key="insights" color="primary" />,
-                            <TrendingUpIcon key="trending" color="primary" />,
-                            <AnalyticsIcon key="analytics" color="primary" />
+                            <InsightsIcon key="insights" sx={{ color: '#667eea', fontSize: 28 }} />,
+                            <TrendingUpIcon key="trending" sx={{ color: '#764ba2', fontSize: 28 }} />,
+                            <AnalyticsIcon key="analytics" sx={{ color: '#ec4899', fontSize: 28 }} />
                         ];
-                        
-                        const content = typeof value === 'object' ? 
-                            JSON.stringify(value, null, 2) : 
-                            String(value);
+
+                        // Format the content as readable text instead of JSON
+                        const content = formatValue(value);
 
                         return renderInsightSection(
                             formatSectionTitle(key),
@@ -160,11 +233,11 @@ const InsightsPanel = () => {
             );
         }
 
-        // Fallback for simple string content
+        // Fallback
         return renderInsightSection(
             'Analysis',
-            String(parsed),
-            <InsightsIcon color="primary" />
+            'No insights available',
+            <InsightsIcon sx={{ color: '#667eea', fontSize: 28 }} />
         );
     };
 
