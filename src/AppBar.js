@@ -41,14 +41,39 @@ const AppBar = () => {
   };
 
   return (
-    <MuiAppBar position="static">
-      <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+    <MuiAppBar
+      position="static"
+      elevation={0}
+      sx={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+      }}
+    >
+      <Toolbar sx={{ py: 1 }}>
+        <Typography
+          variant="h5"
+          component="div"
+          sx={{
+            flexGrow: 1,
+            fontWeight: 700,
+            letterSpacing: '-0.5px',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
           Personal Finance
         </Typography>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {user?.displayName && (
-            <Typography variant="body1" sx={{ color: 'inherit' }}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '1.05rem',
+              }}
+            >
               {getFirstName(user.displayName)}
             </Typography>
           )}
@@ -58,9 +83,14 @@ const AppBar = () => {
             aria-controls="menu-appbar"
             aria-haspopup="true"
             onClick={handleMenu}
-            color="inherit"
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              },
+            }}
           >
-            <AccountCircle />
+            <AccountCircle sx={{ fontSize: 32 }} />
           </IconButton>
           <Menu
             id="menu-appbar"
